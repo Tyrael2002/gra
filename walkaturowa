@@ -1,0 +1,464 @@
+#include <iostream>
+#include <stdlib.h>
+#include <time.h>
+#include <cstring>
+#include <windows.h>
+#include <stdio.h>
+#include <cmath>
+#include <math.h>
+#include <conio.h>
+#include <fstream>
+
+
+using namespace std;
+
+char* tr(char* str)
+{
+    static char buff[256];
+    char cp[] = "\245\206\251\210\344\242\230\276\253\244\217\250\235\343\340\227\275\215ąćęłńóśżźĄĆĘŁŃÓŚŻŹ";
+    if (strlen(str) >= sizeof(buff)) return str;
+    char* bf = buff;
+    while (*str)
+    {
+        char* pos = strchr(cp + 18, *str);
+        *(bf++) = pos ? *(pos - 18) : *str;
+        ++str;
+    }
+    *bf = 0;
+    return buff;
+}
+
+void SetColor(int forgC);
+
+struct postac
+{
+    public:
+    int atak;
+    int obrona;
+    int hp = 100;
+
+    void TuraTwoja();
+    void TuraPrzeciwnika();
+};
+postac gracz, przeciwnik;
+
+void Ekwipunek();
+
+int tura = 0;
+string poztrd, slot1="Pusty", slot2="Pusty", slot3="Pusty";
+unsigned int statustwj=0, statusprz=0;
+bool ploniesz=false, przeciwnikplonie=false;
+char ekwipunek, cr;
+
+void MiksturaLeczenia()
+{
+    cout << tr("Używasz mikstury leczenia!") << endl;
+    gracz.hp=gracz.hp+10;
+}
+void MiksturaObrony()
+{
+    cout << tr("Używasz mikstury obrony!") << endl;
+    gracz.obrona=gracz.obrona+10;
+}
+
+void TuraTwoja()
+{
+    cout << ' ' << endl;
+    int obrkuliognia = 10;
+    cout << tr("Co chcesz zrobić?") << endl;
+    cout << tr("1.Atak") << endl;
+    cout << tr("2.Obrona") << endl;
+    cout << tr("3.Użyj zaklęcia kula ognia") << endl;
+    cout << tr("4.Użyj przedmiotu (NIEDOSTĘPNE)") << endl;
+    cr=getch();
+    switch(cr)
+    {
+       case '1':
+            srand((unsigned int)time(0));
+            gracz.atak = rand() % 10;
+            SetColor(7);
+            cout << "Atakujesz!" << endl;
+            cout << tr("Wylosowałeś: ") << gracz.atak << endl;
+            if (gracz.atak == 0)
+            {
+                cout << tr("Nie zadałeś żadnych obrażeń!") << endl;
+                cout << ' ' << endl;
+                Sleep(500);
+            }
+            else if (przeciwnik.obrona >= gracz.atak)
+            {
+                cout << "Zabierasz przeciwnikowi " << gracz.atak << tr(" punkt/y/ów obrony.") << endl;
+                przeciwnik.obrona = przeciwnik.obrona - gracz.atak;
+                cout << ' ' << endl;
+                Sleep(500);
+            }
+            else if (gracz.atak > przeciwnik.obrona)
+            {
+                gracz.atak = gracz.atak - przeciwnik.obrona;
+                przeciwnik.hp = przeciwnik.hp - gracz.atak;
+                cout << "Zadajesz " << gracz.atak << tr(" obrażeń!") << endl;
+                przeciwnik.obrona = 0;
+                cout << ' ' << endl;
+                Sleep(500);
+            }
+        break;
+        case '2':
+        SetColor(7);
+        gracz.obrona=gracz.obrona+2;
+        cout << tr("Zwiększyłeś obronę o 2 punkty") << endl;
+        cout << ' ' << endl;
+        Sleep(500);
+        break;
+        case '3':
+            if (statusprz > 0)
+            {
+                cout << tr("Zaczekaj aż przeciwnik przestanie płonąć!") << endl;
+                TuraTwoja();
+            }
+            else if (przeciwnik.obrona >= obrkuliognia)
+            {
+                SetColor(7);
+                cout << tr("Rzucasz kulą ognia!") << endl;
+                cout << "Zabierasz przeciwnikowi " << obrkuliognia << tr(" punkt/y/ów obrony.") << endl;
+                przeciwnik.obrona = przeciwnik.obrona - 10;
+                cout << ' ' << endl;
+                Sleep(500);
+            }
+            else if (obrkuliognia > przeciwnik.obrona)
+            {
+                SetColor(7);
+                cout << tr("Rzucasz kulą ognia!") << endl;
+                obrkuliognia = obrkuliognia - przeciwnik.obrona;
+                przeciwnik.hp = przeciwnik.hp - obrkuliognia;
+                cout << "Zadajesz " << obrkuliognia << tr(" obrażeń!") << endl;
+                przeciwnik.obrona = 0;
+                cout << ' ' << endl;
+                Sleep(500);
+            }
+            przeciwnikplonie = true;
+        break;
+        case '4':
+            Ekwipunek();
+        break;
+        default: cout << tr("Nie ma takiej opcji!") << endl; TuraTwoja();
+    }
+}
+
+void Ekwipunek()
+{
+    SetColor(82);
+    cout << tr("Twój ekwipunek:") << endl;
+    cout << "1." << slot1 << endl;
+    cout << "2." << slot2 << endl;
+    cout << "3." << slot3 << endl;
+    cout << tr("Naciśnij 0 aby wrócić") << endl;
+    ekwipunek=getch();
+    switch(ekwipunek)
+    {
+        case '1':
+            if(slot1=="Pusty")
+            {
+                SetColor(100);
+                cout << "Nic tu nie masz!" << endl;
+                SetColor(3);
+                TuraTwoja();
+            }
+            if(slot1=="mikstura leczenia")
+                MiksturaLeczenia();
+            if(slot1=="mikstura obrony")
+                MiksturaObrony();
+        break;
+        case '2':
+            if(slot2=="Pusty")
+            {
+                SetColor(100);
+                cout << "Nic tu nie masz!" << endl;
+                SetColor(3);
+                TuraTwoja();
+            }
+            if(slot1=="mikstura leczenia")
+                MiksturaLeczenia();
+            if(slot1=="mikstura obrony")
+                MiksturaObrony();
+        break;
+        case '3':
+            if(slot3=="Pusty")
+            {
+                SetColor(100);
+                cout << "Nic tu nie masz!" << endl;
+                SetColor(3);
+                TuraTwoja();
+            }
+            if(slot1=="mikstura leczenia")
+                MiksturaLeczenia();
+            if(slot1=="mikstura obrony")
+                MiksturaObrony();
+        break;
+        case '0':
+            SetColor(3);
+            TuraTwoja();
+        break;
+    }
+}
+
+void TuraPrzeciwnika()
+{
+    int obrkuliognia = 10;
+    if (przeciwnikplonie == true)
+    {
+        statusprz = statusprz + 1;
+        cout << tr("Przeciwnik płonie!") << endl;
+        przeciwnik.hp = przeciwnik.hp - 2;
+        if (statusprz == 3)
+        {
+            statusprz = 0;
+            przeciwnikplonie = false;
+        }
+    }
+    cout << ' ' << endl;
+    SetColor(100);
+    cout << "Tura przeciwnika";
+    Sleep(1000);
+    cout << '.';
+    Sleep(1000);
+    cout << '.';
+    Sleep(1000);
+    cout << '.' << endl;
+    SetColor(7);
+    Sleep(1000);
+    if (statustwj == 0)
+    {
+        srand((unsigned int)time(0));
+        int turaprz = rand() % 3;
+        if (turaprz == 0)
+        {
+            srand((unsigned int)time(0));
+            przeciwnik.atak = rand() % 10;
+            cout << "Przeciwnik atakuje!" << endl;
+            cout << tr("Przeciwnik wylosował: ") << przeciwnik.atak << endl;
+            if (przeciwnik.atak == 0)
+            {
+                cout << tr("Przeciwnik nie zadaje żadnych obrażeń!") << endl;
+                cout << ' ' << endl;
+                Sleep(500);
+            }
+            else if (gracz.obrona >= przeciwnik.atak)
+            {
+                cout << "Przeciwnik zabiera tobie " << przeciwnik.atak << tr(" punktów obrony.") << endl;
+                gracz.obrona = gracz.obrona - przeciwnik.atak;
+                cout << ' ' << endl;
+                Sleep(500);
+            }
+            else if (przeciwnik.atak > gracz.obrona)
+            {
+                przeciwnik.atak = przeciwnik.atak - gracz.obrona;
+                gracz.hp = gracz.hp - przeciwnik.atak;
+                cout << "Przeciwnik zadaje " << przeciwnik.atak << tr(" obrażeń!") << endl;
+                gracz.obrona = 0;
+                cout << ' ' << endl;
+                Sleep(500);
+            }
+        }
+        else if (turaprz == 1)
+        {
+            przeciwnik.obrona = przeciwnik.obrona + 2;
+            cout << tr("Przeciwnik zwiększył obronę o 2 punkty!") << endl;
+            cout << ' ' << endl;
+        }
+        else if (turaprz == 2)
+        {
+            cout << tr("Przeciwnik rzuca kulą ognia!") << endl;
+            if (gracz.obrona >= obrkuliognia)
+            {
+                cout << "Tracisz " << obrkuliognia << tr(" punkt/y/ów obrony.") << endl;
+                gracz.obrona = gracz.obrona - 10;
+                cout << ' ' << endl;
+                Sleep(500);
+            }
+            else if (obrkuliognia > gracz.obrona)
+            {
+                obrkuliognia = obrkuliognia - gracz.obrona;
+                gracz.hp = gracz.hp - obrkuliognia;
+                cout << "Przeciwnik zadaje " << obrkuliognia << tr(" obrażeń!") << endl;
+            gracz.obrona = 0;
+            cout << ' ' << endl;
+            Sleep(500);
+            }
+            ploniesz = true;
+        }
+    }
+    else if (statustwj > 0)
+    {
+        srand((unsigned int)time(0));
+        int turaprz = rand() % 2;
+        if (turaprz == 0)
+        {
+            srand((unsigned int)time(0));
+            przeciwnik.atak = rand() % 10;
+            cout << tr("Przeciwnik wylosował: ") << przeciwnik.atak << endl;
+            if (przeciwnik.atak == 0)
+            {
+                cout << tr("Przeciwnik nie zadaje żadnych obrażeń!") << endl;
+                cout << ' ' << endl;
+                Sleep(500);
+            }
+            else if (gracz.obrona >= przeciwnik.atak)
+            {
+                cout << "Przeciwnik zabiera tobie " << przeciwnik.atak << tr(" punktów obrony.") << endl;
+                gracz.obrona = gracz.obrona - przeciwnik.atak;
+                cout << ' ' << endl;
+                Sleep(500);
+            }
+            else if (przeciwnik.atak > gracz.obrona)
+            {
+                przeciwnik.atak = przeciwnik.atak - gracz.obrona;
+                gracz.hp = gracz.hp - przeciwnik.atak;
+                cout << "Przeciwnik zadaje " << przeciwnik.atak << tr(" obrażeń!") << endl;
+                gracz.obrona = 0;
+                cout << ' ' << endl;
+                Sleep(500);
+            }
+        }
+        else if (turaprz == 1)
+        {
+            przeciwnik.obrona = przeciwnik.obrona + 2;
+            cout << tr("Przeciwnik zwiększył obronę o 2 punkty!") << endl;
+            cout << ' ' << endl;
+        }
+    }
+}
+
+
+
+int main()
+{
+    //cout <<tr ("Wybierz poziom trudności:") << endl;
+    //cout <<tr ("1.Łatwy") << endl;
+    //cout <<tr ("2.Średni") << endl;
+    //cout << "3.Trudny" << endl;
+    //cout << ' ' << endl;
+    //cout <<tr ("Wyjaśnienie poziomów trudności:") << endl;
+    //cout << ' ' << endl;
+    //cout <<tr ("Łatwy - obrażenia, które ty zadajesz są zwiększone o 50% z zaokrągleniem w górę.") << endl;
+    //cout << ' ' << endl;
+    //cout <<tr ("Średni - wartości zadawanych obrażeń (twoich i przeciwnika) nie ulegają zmianie.") << endl;
+    //cout << ' ' << endl;
+    //cout <<tr ("Trudny - obrażenia, które ty zadajesz są zmniejszone o 50% z zaokrągleniem w górę.") << endl;
+    //cin >> poztrd;
+
+    int x=0, y=0;
+    char wybor;
+
+    //while (x!=5)
+    //{
+        //cout << "x=" << x << endl;
+        //cout << "y=" << y << endl;
+        //wybor=getch();
+        //switch(wybor)
+        //{
+        //case 'a':
+            //x=x-1;
+        //break;
+        //case 's':
+            //y=y-1;
+        //break;
+        //case 'd':
+            //x=x+1;
+        //break;
+        //case 'w':
+            //y=y+1;
+        //break;
+        //default:
+        //cout << "Zly klawisz!" << endl;
+        //}
+        //if ((y==3) && (x==0) && (wybor=='w'))
+        //{
+            //cout << tr("Trafiłeś na ścianę!") << endl;
+            //Sleep(3000);
+            //y=y-1;
+        //}
+        //if ((y==3) && (x==0) && (wybor=='s'))
+        //{
+            //cout << tr("Trafiłeś na ścianę!") << endl;
+            //Sleep(3000);
+            //y=y+1;
+        //}
+        //system("cls");
+
+    //}
+    while (przeciwnik.hp > 0 && gracz.hp > 0)
+    {
+        tura = tura + 1;
+        SetColor(34);
+        if (ploniesz == true)
+        {
+            statustwj = statustwj + 1;
+            cout << tr("Płoniesz!") << endl;
+            cout << tr("Otrzymujesz 2 punkty obrażeń!") << endl;
+        gracz.hp = gracz.hp - 2;
+            if (statustwj == 3)
+            {
+                statustwj = 0;
+                ploniesz = false;
+            }
+        }
+        cout << "To jest " << tura << " tura!" << endl;
+        cout << ' ' << endl;
+        cout << tr("Twoje zdrowie: ") << gracz.hp << endl;
+        cout << "Posiadasz " << gracz.obrona << " obrony" << endl;
+        SetColor(100);
+        cout << ' ' << endl;
+        cout << tr("Zdrowie przeciwnika: ") << przeciwnik.hp << endl;
+        cout << "Przeciwnik ma " << przeciwnik.obrona << " obrony" << endl;
+        SetColor(3);
+        cout << ' ' << endl;
+        TuraTwoja();
+        TuraPrzeciwnika();
+
+        if (gracz.hp <= 0)
+        {
+            SetColor(100);
+            cout << tr("Przegrałeś.") << endl;
+            cout << tr("Dziękujemy za zagranie w naszą grę!") << endl;
+            cout << "Autorzy: " << endl;
+            cout << "Piotr Hartung" << endl << "Dawid Szymoniak" << endl;
+            cout << ' ' << endl;
+            cout << "Testerzy: " << endl;
+            cout << tr("Emilia Kozłowska") << endl;
+            cout << tr("Naciśnij cokolwiek aby wyjść");
+            getch();
+        }
+        if (przeciwnik.hp <= 0)
+        {
+            SetColor(34);
+            cout << tr("Wygrałeś") << endl;
+            cout << tr("Udało ci się pokonać przeciwnika w ") << tura << " tur(y)!" << endl;
+            cout << tr("Dziękujemy za zagranie w naszą grę!") << endl;
+            cout << "Autorzy: " << endl;
+            cout << "Piotr Hartung" << endl << "Dawid Szymoniak" << endl;
+            cout << ' ' << endl;
+            cout << "Testerzy: " << endl;
+            cout << tr("Emilia Kozłowska") << endl;
+            cout << tr("Naciśnij cokolwiek aby wyjść");
+            getch();
+        }
+
+    }
+
+    return 0;
+}
+
+void SetColor(int ForgC)
+{
+    WORD wColor;
+
+    HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+    if (GetConsoleScreenBufferInfo(hStdOut, &csbi))
+    {
+        wColor = (csbi.wAttributes & 0xF0) + (ForgC & 0x0F);
+        SetConsoleTextAttribute(hStdOut, wColor);
+    }
+    return;
+}
